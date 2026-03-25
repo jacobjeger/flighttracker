@@ -16,9 +16,9 @@ android {
         versionCode 1
         versionName "1.0"
 
-        buildConfigField "String", "FLIGHTAWARE_API_KEY", "\"YOUR_API_KEY\""
+        buildConfigField "String", "FLIGHTAWARE_API_KEY", "\"MVm6suEqfHSZS0q3gzGPcmfGfld1ugjv\""
         buildConfigField "String", "FLIGHTAWARE_BASE_URL", "\"https://aeroapi.flightaware.com/aeroapi/\""
-        buildConfigField "String", "RAILWAY_BASE_URL", "\"https://your-railway-app.railway.app/\""
+        buildConfigField "String", "RAILWAY_BASE_URL", "\"https://luminous-wonder-production-d615.up.railway.app/\""
         buildConfigField "String", "WEATHER_API_KEY", "\"YOUR_WEATHER_API_KEY\""
     }
 
