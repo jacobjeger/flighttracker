@@ -20,22 +20,56 @@ class FlightRepository(
 
     suspend fun searchFlights(query: String): Result<List<FlightData>> = withContext(Dispatchers.IO) {
         try {
-            // Try as flight ident first
-            val cleanQuery = query.trim().uppercase().replace(" ", "")
+            // Try as flight ident first (e.g. LY008, AA100, EL AL 8 -> ELAL8 won't match but LY008 will)
+            val cleanQuery = query.trim().uppercase().replace("\\s+".toRegex(), "")
             if (cleanQuery.matches(Regex("^[A-Z]{2,3}\\d{1,4}$")) || cleanQuery.matches(Regex("^[A-Z0-9]{2}\\d{1,4}$"))) {
-                val response = api.getFlightByIdent(cleanQuery, apiKey)
-                val flights = response.flights
-                if (!flights.isNullOrEmpty()) {
-                    return@withContext Result.success(flights)
+                try {
+                    val response = api.getFlightByIdent(cleanQuery, apiKey)
+                    val flights = response.flights
+                    if (!flights.isNullOrEmpty()) {
+                        return@withContext Result.success(flights)
+                    }
+                } catch (_: Exception) {
+                    // Fall through to advanced search
                 }
             }
 
-            // Try search query
+            // Also try with spaces removed and common airline name patterns
+            val trimmed = query.trim()
+            // Try "EL AL 8" -> "LY8", handle airline name + number
+            val withoutSpaceIdent = trimmed.replace("\\s+".toRegex(), "").uppercase()
+            if (withoutSpaceIdent != cleanQuery && withoutSpaceIdent.matches(Regex("^[A-Z]+\\d{1,4}$"))) {
+                try {
+                    val response = api.getFlightByIdent(withoutSpaceIdent, apiKey)
+                    val flights = response.flights
+                    if (!flights.isNullOrEmpty()) {
+                        return@withContext Result.success(flights)
+                    }
+                } catch (_: Exception) { }
+            }
+
+            // Fall back to advanced search
             val searchQuery = buildSearchQuery(query)
-            val response = api.searchFlights(searchQuery, apiKey)
-            Result.success(response.flights ?: emptyList())
+            try {
+                val response = api.searchFlights(searchQuery, apiKey)
+                Result.success(response.flights ?: emptyList())
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 400) {
+                    // Advanced search failed, try ident as last resort
+                    try {
+                        val response = api.getFlightByIdent(cleanQuery, apiKey)
+                        Result.success(response.flights ?: emptyList())
+                    } catch (_: Exception) {
+                        Result.success(emptyList())
+                    }
+                } else {
+                    throw e
+                }
+            }
         } catch (e: retrofit2.HttpException) {
             Result.failure(mapHttpError(e))
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("No internet connection"))
         } catch (e: Exception) {
             Result.failure(e)
         }
