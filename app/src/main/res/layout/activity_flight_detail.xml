@@ -76,7 +76,7 @@
             style="@style/SectionHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="ROUTE" />
+            android:text="@string/section_route" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -174,7 +174,7 @@
             style="@style/SectionHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TIMES" />
+            android:text="@string/section_times" />
 
         <LinearLayout
             android:id="@+id/times_container"
@@ -227,7 +227,7 @@
             style="@style/SectionHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="TERMINAL &amp; GATE" />
+            android:text="@string/section_terminal_gate" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -245,7 +245,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Departure"
+                    android:text="@string/label_departure"
                     android:textColor="@color/text_hint"
                     android:textSize="10sp" />
 
@@ -277,7 +277,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Arrival"
+                    android:text="@string/label_arrival"
                     android:textColor="@color/text_hint"
                     android:textSize="10sp" />
 
@@ -326,7 +326,7 @@
             style="@style/SectionHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="FLIGHT PROGRESS"
+            android:text="@string/section_flight_progress"
             android:visibility="gone" />
 
         <LinearLayout
@@ -370,7 +370,7 @@
             style="@style/SectionHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="AIRCRAFT" />
+            android:text="@string/section_aircraft" />
 
         <LinearLayout
             android:layout_width="match_parent"

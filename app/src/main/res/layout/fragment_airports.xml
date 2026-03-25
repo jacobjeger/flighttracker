@@ -21,7 +21,7 @@
         style="@style/SectionHeader"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Recent"
+        android:text="@string/label_recent"
         android:paddingTop="12dp" />
 
     <androidx.recyclerview.widget.RecyclerView

@@ -17,7 +17,7 @@ interface FlightAwareApi {
         @Header("x-apikey") apiKey: String
     ): FlightResponse
 
-    @GET("flights/search")
+    @GET("flights/search/advanced")
     suspend fun searchFlights(
         @Query("query") query: String,
         @Header("x-apikey") apiKey: String

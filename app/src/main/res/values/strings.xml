@@ -47,4 +47,12 @@
     <string name="airline_info">Airline Info</string>
     <string name="progress">%d%% complete</string>
     <string name="current_time_at_dest">Current time at destination</string>
+    <string name="section_route">ROUTE</string>
+    <string name="section_times">TIMES</string>
+    <string name="section_terminal_gate">TERMINAL &amp; GATE</string>
+    <string name="section_flight_progress">FLIGHT PROGRESS</string>
+    <string name="section_aircraft">AIRCRAFT</string>
+    <string name="label_departure">Departure</string>
+    <string name="label_arrival">Arrival</string>
+    <string name="label_recent">Recent</string>
 </resources>
