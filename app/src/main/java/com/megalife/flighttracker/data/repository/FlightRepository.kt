@@ -102,6 +102,47 @@ class FlightRepository(
         }
     }
 
+    // Search mode: flights only — just look up by ident
+    suspend fun searchFlightsByIdent(query: String): Result<List<FlightData>> = withContext(Dispatchers.IO) {
+        try {
+            val cleanQuery = query.trim().uppercase().replace("\\s+".toRegex(), "")
+            val response = api.getFlightByIdent(cleanQuery, apiKey)
+            Result.success(response.flights ?: emptyList())
+        } catch (e: retrofit2.HttpException) {
+            Result.failure(mapHttpError(e))
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("No internet connection"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    // Search mode: airports — search departures from the given airport code
+    suspend fun searchByAirport(query: String): Result<List<FlightData>> = withContext(Dispatchers.IO) {
+        try {
+            val code = query.trim().uppercase().replace("\\s+".toRegex(), "")
+            // Try as airport code for departures
+            val depResponse = api.getAirportDepartures(code, apiKey)
+            val departures = depResponse.departures ?: emptyList()
+            if (departures.isNotEmpty()) {
+                return@withContext Result.success(departures)
+            }
+            // If no departures, try arrivals
+            val arrResponse = api.getAirportArrivals(code, apiKey)
+            Result.success(arrResponse.arrivals ?: emptyList())
+        } catch (e: retrofit2.HttpException) {
+            if (e.code() == 404) {
+                Result.failure(Exception("Airport not found: ${query.trim().uppercase()}"))
+            } else {
+                Result.failure(mapHttpError(e))
+            }
+        } catch (e: java.net.UnknownHostException) {
+            Result.failure(Exception("No internet connection"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     private fun buildSearchQuery(query: String): String {
         val parts = query.trim().split("\\s+".toRegex())
         // If it looks like origin-dest pair (two 3-letter codes)

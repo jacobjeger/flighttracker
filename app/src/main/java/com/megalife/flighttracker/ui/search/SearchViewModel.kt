@@ -2,12 +2,22 @@ package com.megalife.flighttracker.ui.search
 
 import androidx.lifecycle.*
 import com.megalife.flighttracker.data.model.FlightData
+import com.megalife.flighttracker.data.repository.AirportRepository
 import com.megalife.flighttracker.data.repository.FlightRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-class SearchViewModel(private val repository: FlightRepository) : ViewModel() {
+enum class SearchMode {
+    ALL,
+    FLIGHTS,
+    AIRPORTS
+}
+
+class SearchViewModel(
+    private val flightRepository: FlightRepository,
+    private val airportRepository: AirportRepository
+) : ViewModel() {
 
     private val _searchResults = MutableLiveData<List<FlightData>>()
     val searchResults: LiveData<List<FlightData>> = _searchResults
@@ -21,7 +31,19 @@ class SearchViewModel(private val repository: FlightRepository) : ViewModel() {
     private val _query = MutableLiveData<String>()
     val query: LiveData<String> = _query
 
+    private val _searchMode = MutableLiveData(SearchMode.ALL)
+    val searchMode: LiveData<SearchMode> = _searchMode
+
     private var searchJob: Job? = null
+
+    fun setSearchMode(mode: SearchMode) {
+        _searchMode.value = mode
+        // Re-search with current query if exists
+        val currentQuery = _query.value
+        if (!currentQuery.isNullOrBlank()) {
+            search(currentQuery)
+        }
+    }
 
     fun search(queryText: String) {
         _query.value = queryText
@@ -39,7 +61,14 @@ class SearchViewModel(private val repository: FlightRepository) : ViewModel() {
             _isLoading.value = true
             _error.value = null
 
-            val result = repository.searchFlights(queryText)
+            val mode = _searchMode.value ?: SearchMode.ALL
+
+            val result = when (mode) {
+                SearchMode.FLIGHTS -> flightRepository.searchFlightsByIdent(queryText)
+                SearchMode.AIRPORTS -> flightRepository.searchByAirport(queryText)
+                SearchMode.ALL -> flightRepository.searchFlights(queryText)
+            }
+
             result.fold(
                 onSuccess = { flights ->
                     _searchResults.value = flights
@@ -65,10 +94,13 @@ class SearchViewModel(private val repository: FlightRepository) : ViewModel() {
         _error.value = null
     }
 
-    class Factory(private val repository: FlightRepository) : ViewModelProvider.Factory {
+    class Factory(
+        private val flightRepository: FlightRepository,
+        private val airportRepository: AirportRepository
+    ) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return SearchViewModel(repository) as T
+            return SearchViewModel(flightRepository, airportRepository) as T
         }
     }
 }

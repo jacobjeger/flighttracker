@@ -55,4 +55,11 @@
     <string name="label_departure">Departure</string>
     <string name="label_arrival">Arrival</string>
     <string name="label_recent">Recent</string>
+    <string name="search_mode_all">All</string>
+    <string name="search_mode_flights">Flights</string>
+    <string name="search_mode_airports">Airports</string>
+    <string name="search_hint_all">Flight number, airport, or city</string>
+    <string name="search_hint_flights">Flight number (e.g. LY008, AA100)</string>
+    <string name="search_hint_airports">Airport code or city name</string>
+    <string name="search_by">Search by:</string>
 </resources>

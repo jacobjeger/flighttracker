@@ -6,12 +6,66 @@
     android:padding="@dimen/screen_padding"
     android:descendantFocusability="afterDescendants">
 
+    <!-- Search mode selector -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/mode_all"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/search_mode_all"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:textColor="@color/text_primary"
+            android:background="@drawable/bg_button_focusable"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/mode_flights"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/search_mode_flights"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_focusable"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp" />
+
+        <TextView
+            android:id="@+id/mode_airports"
+            android:layout_width="0dp"
+            android:layout_height="36dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="@string/search_mode_airports"
+            android:textSize="13sp"
+            android:textColor="@color/text_secondary"
+            android:background="@drawable/bg_focusable"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+
     <EditText
         android:id="@+id/search_edit_text"
         style="@style/SearchEditText"
         android:layout_width="match_parent"
         android:layout_height="@dimen/search_field_height"
-        android:hint="@string/search_hint"
+        android:hint="@string/search_hint_all"
         android:focusable="true"
         android:focusableInTouchMode="true"
         android:importantForAutofill="no" />
