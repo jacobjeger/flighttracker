@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/nav_search"
+        android:icon="@drawable/ic_search"
+        android:title="@string/tab_search" />
+    <item
+        android:id="@+id/nav_tracked"
+        android:icon="@drawable/ic_tracked"
+        android:title="@string/tab_tracked" />
+    <item
+        android:id="@+id/nav_airports"
+        android:icon="@drawable/ic_airport"
+        android:title="@string/tab_airports" />
+    <item
+        android:id="@+id/nav_recent"
+        android:icon="@drawable/ic_recent"
+        android:title="@string/tab_recent" />
+</menu>

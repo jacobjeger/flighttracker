@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/screen_padding"
+    android:descendantFocusability="blocksDescendants">
+
+    <TextView
+        android:id="@+id/tracked_title"
+        style="@style/LargeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/tab_tracked"
+        android:paddingBottom="@dimen/section_spacing" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/tracked_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:descendantFocusability="afterDescendants" />
+
+    <TextView
+        android:id="@+id/empty_state"
+        style="@style/MediumText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/no_tracked_flights"
+        android:textColor="@color/text_secondary"
+        android:visibility="gone" />
+
+</LinearLayout>

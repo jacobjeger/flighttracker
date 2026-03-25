@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="@dimen/screen_padding"
+    android:descendantFocusability="blocksDescendants">
+
+    <EditText
+        android:id="@+id/airport_search_edit_text"
+        style="@style/SearchEditText"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/search_field_height"
+        android:hint="@string/airport_search_hint"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:importantForAutofill="no" />
+
+    <TextView
+        android:id="@+id/recent_label"
+        style="@style/SectionHeader"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Recent"
+        android:paddingTop="12dp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recent_airports_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:descendantFocusability="afterDescendants" />
+
+    <TextView
+        android:id="@+id/empty_state"
+        style="@style/MediumText"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/no_recent_airports"
+        android:textColor="@color/text_secondary"
+        android:visibility="gone" />
+
+</LinearLayout>

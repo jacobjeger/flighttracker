@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "44976824225",
+    "project_id": "megalife-e1948",
+    "storage_bucket": "megalife-e1948.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44976824225:android:1b273b6b09e81b1639f5e0",
+        "android_client_info": {
+          "package_name": "com.megalife.flighttracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2ShWCfMpuqE5MoZfLgAgbAlY_v9yTYbo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
