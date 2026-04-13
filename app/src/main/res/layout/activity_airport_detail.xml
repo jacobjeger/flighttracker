@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/background"
-    android:descendantFocusability="afterDescendants">
+    android:descendantFocusability="blocksDescendants">
 
     <!-- Airport Header -->
     <LinearLayout

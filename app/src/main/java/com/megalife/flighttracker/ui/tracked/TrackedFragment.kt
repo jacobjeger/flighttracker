@@ -2,10 +2,6 @@ package com.megalife.flighttracker.ui.tracked
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.HapticFeedbackConstants
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +18,6 @@ import com.megalife.flighttracker.data.db.entity.TrackedFlight
 import com.megalife.flighttracker.ui.MainActivity
 import com.megalife.flighttracker.ui.adapter.TrackedFlightAdapter
 import com.megalife.flighttracker.ui.detail.FlightDetailActivity
-import com.megalife.flighttracker.util.FlightUtils
 
 class TrackedFragment : Fragment() {
 
@@ -46,25 +41,6 @@ class TrackedFragment : Fragment() {
 
         setupRecyclerView()
         observeViewModel()
-
-        // Handle * key for force refresh
-        view.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                if (keyCode == KeyEvent.KEYCODE_STAR) {
-                    forceRefresh()
-                    return@setOnKeyListener true
-                }
-            }
-            false
-        }
-
-        // Focus first item
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (adapter.itemCount > 0) {
-                trackedList.getChildAt(0)?.requestFocus()
-            }
-        }, 250)
     }
 
     private fun setupRecyclerView() {
@@ -96,7 +72,7 @@ class TrackedFragment : Fragment() {
         }
     }
 
-    private fun forceRefresh() {
+    fun forceRefresh() {
         viewModel.forceRefresh()
     }
 
@@ -117,6 +93,11 @@ class TrackedFragment : Fragment() {
             .show()
     }
 
+    fun showQuickActions(position: Int) {
+        val tracked = adapter.currentList.getOrNull(position) ?: return
+        showQuickActions(tracked)
+    }
+
     private fun shareFlightStatus(tracked: TrackedFlight) {
         val text = buildString {
             appendLine("✈️ ${tracked.flightNumber} Update")
@@ -132,4 +113,10 @@ class TrackedFragment : Fragment() {
         }
         startActivity(Intent.createChooser(shareIntent, "Share flight status"))
     }
+
+    // --- Public API for Activity's centralized D-pad handling ---
+
+    fun getListView(): RecyclerView? = if (::trackedList.isInitialized) trackedList else null
+
+    fun getItemCount(): Int = if (::adapter.isInitialized) adapter.itemCount else 0
 }

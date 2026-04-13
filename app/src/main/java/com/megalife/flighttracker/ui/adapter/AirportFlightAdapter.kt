@@ -1,7 +1,5 @@
 package com.megalife.flighttracker.ui.adapter
 
-import android.view.HapticFeedbackConstants
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -68,19 +66,7 @@ class AirportFlightAdapter(
         holder.statusBadge.setTextColor(FlightUtils.getStatusColor(FlightUtils.getFlightStatus(flight)))
 
         holder.itemView.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             onFlightClicked(flight)
-        }
-
-        holder.itemView.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-                    onFlightClicked(flight)
-                    return@setOnKeyListener true
-                }
-            }
-            false
         }
     }
 

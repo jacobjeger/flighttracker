@@ -1,14 +1,18 @@
 package com.megalife.flighttracker.ui.detail
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.HapticFeedbackConstants
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import android.view.KeyEvent
 import android.view.View
 import android.view.ViewGroup
@@ -85,6 +89,44 @@ class FlightDetailActivity : AppCompatActivity() {
     private lateinit var actualArrValue: TextView
     private lateinit var actualArrAlt: TextView
 
+    // D-pad: focusable action views in order
+    private lateinit var focusableViews: List<View>
+
+    // Long-press CENTER tracking
+    private val longPressHandler = Handler(Looper.getMainLooper())
+    private var centerDownTime = 0L
+    private var longPressTriggered = false
+    private val longPressRunnable = Runnable {
+        longPressTriggered = true
+        doHaptic(50)
+        showQuickActionMenu()
+    }
+
+    // Scroll amount in pixels (100dp)
+    private val scrollAmountPx: Int by lazy {
+        (100 * resources.displayMetrics.density).toInt()
+    }
+
+    // Vibrator
+    private val vibrator: Vibrator by lazy {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val mgr = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            mgr.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+
+    private fun doHaptic(ms: Long = 20L) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(ms, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(ms)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_flight_detail)
@@ -112,9 +154,14 @@ class FlightDetailActivity : AppCompatActivity() {
 
         setupButtons()
 
+        // Build focusable view list
+        focusableViews = listOf(trackButton, shareButton, airlinePhone)
+        focusableViews.forEach { it.isFocusable = true; it.isFocusableInTouchMode = true }
+
         // Focus first button
         Handler(Looper.getMainLooper()).postDelayed({
             trackButton.requestFocus()
+            scrollToFocused(trackButton)
         }, 300)
     }
 
@@ -342,41 +389,142 @@ class FlightDetailActivity : AppCompatActivity() {
 
     private fun setupButtons() {
         trackButton.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            doHaptic()
             toggleTrack()
-        }
-        trackButton.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                toggleTrack()
-                true
-            } else false
         }
 
         shareButton.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            doHaptic()
             shareFlight()
-        }
-        shareButton.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                shareFlight()
-                true
-            } else false
         }
 
         airlinePhone.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+            doHaptic()
             makeCall()
         }
-        airlinePhone.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN && (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER)) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                makeCall()
-                true
-            } else false
+    }
+
+    // ── Central D-pad dispatch ──────────────────────────────────────────
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val keyCode = event.keyCode
+
+        when (keyCode) {
+            KeyEvent.KEYCODE_BACK -> {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    doHaptic()
+                    finish()
+                }
+                return true
+            }
+
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    doHaptic()
+                    scrollView.smoothScrollBy(0, -scrollAmountPx)
+                }
+                return true
+            }
+
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    doHaptic()
+                    scrollView.smoothScrollBy(0, scrollAmountPx)
+                }
+                return true
+            }
+
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    doHaptic()
+                    moveFocus(-1)
+                }
+                return true
+            }
+
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    doHaptic()
+                    moveFocus(1)
+                }
+                return true
+            }
+
+            KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
+                if (event.action == KeyEvent.ACTION_DOWN) {
+                    if (event.repeatCount == 0) {
+                        centerDownTime = System.currentTimeMillis()
+                        longPressTriggered = false
+                        longPressHandler.postDelayed(longPressRunnable, 500)
+                    }
+                } else if (event.action == KeyEvent.ACTION_UP) {
+                    longPressHandler.removeCallbacks(longPressRunnable)
+                    if (!longPressTriggered) {
+                        doHaptic()
+                        activateFocusedButton()
+                    }
+                }
+                return true
+            }
+        }
+
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun moveFocus(direction: Int) {
+        val currentIndex = focusableViews.indexOfFirst { it.isFocused }
+        val nextIndex = (currentIndex + direction).coerceIn(0, focusableViews.size - 1)
+        val target = focusableViews[nextIndex]
+        target.requestFocus()
+        scrollToFocused(target)
+    }
+
+    private fun scrollToFocused(view: View) {
+        view.post {
+            val location = IntArray(2)
+            view.getLocationInWindow(location)
+            val scrollViewLocation = IntArray(2)
+            scrollView.getLocationInWindow(scrollViewLocation)
+            val relativeTop = location[1] - scrollViewLocation[1]
+            val scrollViewHeight = scrollView.height
+            // Scroll so the view is roughly centered
+            val targetScroll = scrollView.scrollY + relativeTop - scrollViewHeight / 2 + view.height / 2
+            scrollView.smoothScrollTo(0, targetScroll.coerceAtLeast(0))
         }
     }
+
+    private fun activateFocusedButton() {
+        val focused = focusableViews.firstOrNull { it.isFocused } ?: return
+        when (focused.id) {
+            R.id.track_button -> toggleTrack()
+            R.id.share_button -> shareFlight()
+            R.id.airline_phone -> makeCall()
+        }
+    }
+
+    private fun showQuickActionMenu() {
+        // Long-press CENTER: quick action menu for track/share
+        val items = arrayOf("Track / Untrack Flight", "Share Flight")
+        android.app.AlertDialog.Builder(this)
+            .setTitle("Quick Actions")
+            .setItems(items) { _, which ->
+                doHaptic()
+                when (which) {
+                    0 -> toggleTrack()
+                    1 -> shareFlight()
+                }
+            }
+            .show()
+    }
+
+    // ── Fade transition ─────────────────────────────────────────────────
+
+    override fun finish() {
+        super.finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
+    // ── Actions ─────────────────────────────────────────────────────────
 
     private fun toggleTrack() {
         val isTracked = viewModel.isTracked.value ?: false
@@ -405,6 +553,7 @@ class FlightDetailActivity : AppCompatActivity() {
             putExtra(Intent.EXTRA_TEXT, text)
         }
         startActivity(Intent.createChooser(shareIntent, "Share flight status"))
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
     }
 
     private fun makeCall() {
@@ -414,20 +563,13 @@ class FlightDetailActivity : AppCompatActivity() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
             val intent = Intent(Intent.ACTION_CALL, Uri.parse("tel:$phone"))
             startActivity(intent)
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
         } else {
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CALL_PHONE), REQUEST_CALL_PERMISSION)
         }
     }
 
-    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
-        window.decorView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            finish()
-            return true
-        }
-        return super.onKeyDown(keyCode, event)
-    }
+    // ── Lifecycle ───────────────────────────────────────────────────────
 
     override fun onResume() {
         super.onResume()
@@ -444,6 +586,11 @@ class FlightDetailActivity : AppCompatActivity() {
         super.onPause()
         refreshTimer?.cancel()
         refreshTimer = null
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        longPressHandler.removeCallbacksAndMessages(null)
     }
 
     companion object {

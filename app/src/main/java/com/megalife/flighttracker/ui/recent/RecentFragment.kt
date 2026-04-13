@@ -2,10 +2,6 @@ package com.megalife.flighttracker.ui.recent
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.view.HapticFeedbackConstants
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -47,28 +43,8 @@ class RecentFragment : Fragment() {
         observeViewModel()
 
         clearAllButton.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             viewModel.clearAll()
         }
-
-        clearAllButton.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-                    viewModel.clearAll()
-                    return@setOnKeyListener true
-                }
-            }
-            false
-        }
-
-        Handler(Looper.getMainLooper()).postDelayed({
-            if (adapter.itemCount > 0) {
-                recentList.getChildAt(0)?.requestFocus()
-            } else {
-                clearAllButton.requestFocus()
-            }
-        }, 250)
     }
 
     private fun setupRecyclerView() {
@@ -111,5 +87,20 @@ class RecentFragment : Fragment() {
             }
             .setNegativeButton("Cancel", null)
             .show()
+    }
+
+    // --- Public API for Activity's centralized D-pad handling ---
+
+    fun getListView(): RecyclerView? = if (::recentList.isInitialized) recentList else null
+
+    fun getItemCount(): Int = if (::adapter.isInitialized) adapter.itemCount else 0
+
+    fun showQuickActions(position: Int) {
+        val recent = adapter.currentList.getOrNull(position) ?: return
+        showQuickActions(recent)
+    }
+
+    fun clearAll() {
+        viewModel.clearAll()
     }
 }

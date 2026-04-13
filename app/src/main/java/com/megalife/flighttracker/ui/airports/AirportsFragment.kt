@@ -2,12 +2,6 @@ package com.megalife.flighttracker.ui.airports
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.HapticFeedbackConstants
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -20,7 +14,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.megalife.flighttracker.FlightTrackerApp
 import com.megalife.flighttracker.R
 import com.megalife.flighttracker.ui.adapter.RecentAirportAdapter
-import com.megalife.flighttracker.util.DpadUtils
 
 class AirportsFragment : Fragment() {
 
@@ -47,12 +40,7 @@ class AirportsFragment : Fragment() {
         emptyState = view.findViewById(R.id.empty_state)
 
         setupRecyclerView()
-        setupSearch()
         observeViewModel()
-
-        Handler(Looper.getMainLooper()).post {
-            searchEditText.requestFocus()
-        }
     }
 
     private fun setupRecyclerView() {
@@ -61,44 +49,6 @@ class AirportsFragment : Fragment() {
         }
         recentAirportsList.layoutManager = LinearLayoutManager(requireContext())
         recentAirportsList.adapter = adapter
-    }
-
-    private fun setupSearch() {
-        searchEditText.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-
-                when {
-                    (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) -> {
-                        val query = searchEditText.text.toString().trim()
-                        if (query.isNotEmpty()) {
-                            openAirportDetail(query.uppercase())
-                            return@setOnKeyListener true
-                        }
-                    }
-                    keyCode == KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        if (adapter.itemCount > 0) {
-                            recentAirportsList.getChildAt(0)?.requestFocus()
-                            return@setOnKeyListener true
-                        }
-                    }
-                    keyCode == KeyEvent.KEYCODE_BACK -> {
-                        if (searchEditText.text.isNotEmpty()) {
-                            searchEditText.text.clear()
-                            return@setOnKeyListener true
-                        }
-                    }
-                    DpadUtils.isNumberKey(keyCode) -> {
-                        val char = DpadUtils.keyToChar(keyCode)
-                        if (char != null) {
-                            searchEditText.append(char.toString())
-                            return@setOnKeyListener true
-                        }
-                    }
-                }
-            }
-            false
-        }
     }
 
     private fun observeViewModel() {
@@ -114,5 +64,33 @@ class AirportsFragment : Fragment() {
         val intent = Intent(requireContext(), AirportDetailActivity::class.java)
         intent.putExtra(AirportDetailActivity.EXTRA_AIRPORT_CODE, code)
         startActivity(intent)
+    }
+
+    // --- Public API for Activity's centralized D-pad handling ---
+
+    fun getListView(): RecyclerView? = if (::recentAirportsList.isInitialized) recentAirportsList else null
+
+    fun getItemCount(): Int = if (::adapter.isInitialized) adapter.itemCount else 0
+
+    fun getSearchField(): EditText? = if (::searchEditText.isInitialized) searchEditText else null
+
+    fun submitAirportSearch() {
+        val query = searchEditText.text.toString().trim()
+        if (query.isNotEmpty()) {
+            openAirportDetail(query.uppercase())
+        }
+    }
+
+    fun onFilterToggle() {
+        // * key: focus the search field for filtering
+        if (::searchEditText.isInitialized) {
+            searchEditText.text.clear()
+            searchEditText.requestFocus()
+        }
+    }
+
+    fun onSortToggle() {
+        // # key: toggle sort order on recent airports list
+        // TODO: implement sort toggling in viewmodel when needed
     }
 }

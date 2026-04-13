@@ -2,12 +2,8 @@ package com.megalife.flighttracker.ui.search
 
 import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.HapticFeedbackConstants
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,7 +18,6 @@ import com.megalife.flighttracker.FlightTrackerApp
 import com.megalife.flighttracker.R
 import com.megalife.flighttracker.ui.adapter.FlightAdapter
 import com.megalife.flighttracker.ui.detail.FlightDetailActivity
-import com.megalife.flighttracker.util.DpadUtils
 
 class SearchFragment : Fragment() {
 
@@ -61,15 +56,10 @@ class SearchFragment : Fragment() {
         setupRecyclerView()
         setupSearch()
         observeViewModel()
-
-        Handler(Looper.getMainLooper()).post {
-            searchEditText.requestFocus()
-        }
     }
 
     private fun setupModeSelector() {
         val modeClickListener = View.OnClickListener { v ->
-            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             when (v.id) {
                 R.id.mode_all -> selectMode(SearchMode.ALL)
                 R.id.mode_flights -> selectMode(SearchMode.FLIGHTS)
@@ -80,28 +70,6 @@ class SearchFragment : Fragment() {
         modeAll.setOnClickListener(modeClickListener)
         modeFlights.setOnClickListener(modeClickListener)
         modeAirports.setOnClickListener(modeClickListener)
-
-        // D-pad key handling for mode buttons
-        val modeKeyListener = View.OnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_CENTER, KeyEvent.KEYCODE_ENTER -> {
-                        v.performClick()
-                        return@OnKeyListener true
-                    }
-                    KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        searchEditText.requestFocus()
-                        return@OnKeyListener true
-                    }
-                }
-            }
-            false
-        }
-
-        modeAll.setOnKeyListener(modeKeyListener)
-        modeFlights.setOnKeyListener(modeKeyListener)
-        modeAirports.setOnKeyListener(modeKeyListener)
 
         // Set initial state
         selectMode(SearchMode.ALL)
@@ -155,40 +123,6 @@ class SearchFragment : Fragment() {
                 viewModel.search(s?.toString() ?: "")
             }
         })
-
-        searchEditText.setOnKeyListener { v, keyCode, event ->
-            if (event.action == KeyEvent.ACTION_DOWN) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-
-                when {
-                    keyCode == KeyEvent.KEYCODE_DPAD_DOWN -> {
-                        if (adapter.itemCount > 0) {
-                            resultsList.getChildAt(0)?.requestFocus()
-                            return@setOnKeyListener true
-                        }
-                    }
-                    keyCode == KeyEvent.KEYCODE_DPAD_UP -> {
-                        modeAll.requestFocus()
-                        return@setOnKeyListener true
-                    }
-                    keyCode == KeyEvent.KEYCODE_BACK -> {
-                        if (searchEditText.text.isNotEmpty()) {
-                            searchEditText.text.clear()
-                            viewModel.clearSearch()
-                            return@setOnKeyListener true
-                        }
-                    }
-                    DpadUtils.isNumberKey(keyCode) -> {
-                        val char = DpadUtils.keyToChar(keyCode)
-                        if (char != null) {
-                            searchEditText.append(char.toString())
-                            return@setOnKeyListener true
-                        }
-                    }
-                }
-            }
-            false
-        }
     }
 
     private fun observeViewModel() {
@@ -215,5 +149,19 @@ class SearchFragment : Fragment() {
         viewModel.searchMode.observe(viewLifecycleOwner) { mode ->
             updateModeUI(mode)
         }
+    }
+
+    // --- Public API for Activity's centralized D-pad handling ---
+
+    fun getListView(): RecyclerView? = if (::resultsList.isInitialized) resultsList else null
+
+    fun getItemCount(): Int = if (::adapter.isInitialized) adapter.itemCount else 0
+
+    fun getSearchField(): EditText? = if (::searchEditText.isInitialized) searchEditText else null
+
+    fun getSearchMode(): SearchMode = viewModel.searchMode.value ?: SearchMode.ALL
+
+    fun setSearchMode(mode: SearchMode) {
+        selectMode(mode)
     }
 }

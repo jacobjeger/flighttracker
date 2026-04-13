@@ -1,10 +1,6 @@
 package com.megalife.flighttracker.ui.adapter
 
 import android.graphics.drawable.GradientDrawable
-import android.os.Handler
-import android.os.Looper
-import android.view.HapticFeedbackConstants
-import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +10,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.megalife.flighttracker.R
 import com.megalife.flighttracker.data.db.entity.TrackedFlight
-import com.megalife.flighttracker.util.DpadUtils
 import com.megalife.flighttracker.util.FlightUtils
 import java.text.SimpleDateFormat
 import java.util.*
@@ -97,40 +92,7 @@ class TrackedFlightAdapter(
 
         // Click handling
         holder.itemView.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
             onFlightClicked(flight)
-        }
-
-        // D-pad long press handling
-        var longPressHandler: Handler? = null
-        var longPressRunnable: Runnable? = null
-
-        holder.itemView.setOnKeyListener { v, keyCode, event ->
-            if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER || keyCode == KeyEvent.KEYCODE_ENTER) {
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                when (event.action) {
-                    KeyEvent.ACTION_DOWN -> {
-                        if (event.repeatCount == 0) {
-                            longPressHandler = Handler(Looper.getMainLooper())
-                            longPressRunnable = Runnable {
-                                onLongPress(flight)
-                            }
-                            longPressHandler?.postDelayed(longPressRunnable!!, DpadUtils.LONG_PRESS_THRESHOLD)
-                        }
-                        true
-                    }
-                    KeyEvent.ACTION_UP -> {
-                        longPressRunnable?.let { longPressHandler?.removeCallbacks(it) }
-                        if (event.eventTime - event.downTime < DpadUtils.LONG_PRESS_THRESHOLD) {
-                            onFlightClicked(flight)
-                        }
-                        true
-                    }
-                    else -> false
-                }
-            } else {
-                false
-            }
         }
 
         holder.itemView.setOnLongClickListener {
